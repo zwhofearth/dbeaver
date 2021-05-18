@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-SymbolicName: org.jkiss.dbeaver.swtbottest;singleton:=true
+Bundle-Name: %Bundle-Name
+Bundle-Version: 0.0.1.qualifier
+Bundle-Release-Date: 20210518
+Require-Bundle: org.hamcrest.core,
+ org.apache.log4j,
+ org.eclipse.ui,
+ org.junit,
+ org.eclipse.swtbot.eclipse.finder,
+ org.eclipse.swtbot.junit4_x
+Bundle-ManifestVersion: 2
+Bundle-Vendor: %Bundle-Vendor
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-ActivationPolicy: lazy

@@ -21,13 +21,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.*;
+import java.util.*;
 
 public class JSONUtilsTest {
 
@@ -75,7 +70,7 @@ public class JSONUtilsTest {
 		Assert.assertEquals(new Date(((Number) 22).longValue()), JSONUtils.parseDate(((Number) 22)));
 		Assert.assertEquals(new Date(((Number) Long.MAX_VALUE).longValue()), JSONUtils.parseDate(Long.MAX_VALUE));
 
-		Assert.assertEquals("Sat May 05 04:50:55 PDT 2018", JSONUtils.parseDate("2018-05-05T11:50:55").toString());
+		Assert.assertEquals(Date.from(Instant.from(LocalDateTime.of(2018, 5, 5, 11, 50, 55, 0))), JSONUtils.parseDate("2018-05-05T11:50:55"));
 
 		Exception exception = Assert.assertThrows(IllegalArgumentException.class, () -> {
 			JSONUtils.parseDate(((Number) 99.88));

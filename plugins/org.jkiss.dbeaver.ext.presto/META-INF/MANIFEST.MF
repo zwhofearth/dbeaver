@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-SymbolicName: org.jkiss.dbeaver.ext.presto;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Release-Date: 20210705
+Bundle-Vendor: %Bundle-Vendor
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: PrestoActivator
+Require-Bundle: org.jkiss.dbeaver.model;visibility:=reexport, //FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ org.jkiss.dbeaver.model.sql;visibility:=reexport,
+ org.jkiss.dbeaver.ext.generic;visibility:=reexport
+Export-Package: org.jkiss.dbeaver.ext.presto,
+ org.jkiss.dbeaver.ext.presto.model
+Bundle-Localization: OSGI-INF/l10n/bundle
+Automatic-Module-Name: org.jkiss.dbeaver.ext.presto

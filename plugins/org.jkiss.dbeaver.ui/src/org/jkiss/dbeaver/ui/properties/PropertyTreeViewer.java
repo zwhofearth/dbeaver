@@ -48,9 +48,7 @@ import org.jkiss.dbeaver.model.runtime.DBRProgressMonitor;
 import org.jkiss.dbeaver.model.struct.DBSObject;
 import org.jkiss.dbeaver.runtime.DBWorkbench;
 import org.jkiss.dbeaver.runtime.properties.*;
-import org.jkiss.dbeaver.ui.BooleanRenderer;
-import org.jkiss.dbeaver.ui.DefaultViewerToolTipSupport;
-import org.jkiss.dbeaver.ui.UIUtils;
+import org.jkiss.dbeaver.ui.*;
 import org.jkiss.dbeaver.ui.controls.ObjectViewerRenderer;
 import org.jkiss.dbeaver.ui.internal.UIMessages;
 import org.jkiss.dbeaver.utils.GeneralUtils;
@@ -157,11 +155,6 @@ public class PropertyTreeViewer extends TreeViewer {
                 }
 
                 return getPropertyValue(node);
-            }
-
-            @Override
-            protected int getBooleanEditStyle() {
-                return ES_LEFT;
             }
 
             @Override
@@ -966,11 +959,14 @@ public class PropertyTreeViewer extends TreeViewer {
 
                     Class<?> propDataType = node.property.getDataType();
                     if (Boolean.class == propDataType || Boolean.TYPE == propDataType) {
-                        BooleanRenderer.Style booleanStyle = BooleanRenderer.getDefaultStyle();
                         if (propertyValue != null && !(propertyValue instanceof Boolean)) {
                             propertyValue = CommonUtils.toBoolean(propertyValue);
                         }
-                        return booleanStyle.getText((Boolean) propertyValue);
+                        if (renderer.getBooleanStyles().getMode() == BooleanMode.TEXT) {
+                            return renderer.getBooleanStyles().getStyle((Boolean) propertyValue).getText();
+                        } else {
+                            return "";
+                        }
                     } else if (propertyValue == null || renderer.isHyperlink(propertyValue)) {
                         return ""; //$NON-NLS-1$
                     } else if (isHidePropertyValue(node.property)) {

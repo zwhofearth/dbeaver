@@ -17,23 +17,36 @@
  */
 package org.jkiss.dbeaver.ui.preferences;
 
+import org.eclipse.core.commands.common.EventManager;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.IWorkbenchPropertyPage;
+import org.jkiss.code.NotNull;
 import org.jkiss.code.Nullable;
 import org.jkiss.dbeaver.DBeaverPreferences;
 import org.jkiss.dbeaver.core.CoreMessages;
 import org.jkiss.dbeaver.model.preferences.DBPPreferenceStore;
 import org.jkiss.dbeaver.runtime.DBWorkbench;
-import org.jkiss.dbeaver.ui.BooleanRenderer;
-import org.jkiss.dbeaver.ui.UIUtils;
+import org.jkiss.dbeaver.ui.*;
+import org.jkiss.dbeaver.ui.controls.DefaultColorSelector;
+import org.jkiss.dbeaver.ui.controls.TextWithDropDown;
 import org.jkiss.dbeaver.ui.navigator.NavigatorPreferences;
 import org.jkiss.dbeaver.utils.PrefUtils;
-import org.jkiss.utils.CommonUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * PrefPageDatabaseEditors
@@ -49,7 +62,11 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
     private Button showPreviewOnSave;
     private Button syncEditorDataSourceWithNavigator;
 
-    private Combo booleanStyleSelector;
+    private final List<Consumer<BooleanStyleSet>> booleanStylesChangeListeners = new ArrayList<>();
+    private BooleanPanel booleanCheckedPanel;
+    private BooleanPanel booleanUncheckedPanel;
+    private BooleanPanel booleanNullPanel;
+    private RGB defaultColor;
 
     public PrefPageDatabaseEditors()
     {
@@ -85,11 +102,49 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
         }
 
         {
-            Group groupEditors = UIUtils.createControlGroup(composite, CoreMessages.dialog_connection_wizard_final_group_misc, 2, GridData.VERTICAL_ALIGN_BEGINNING, 0);
-            booleanStyleSelector = UIUtils.createLabelCombo(groupEditors, CoreMessages.pref_page_ui_general_boolean_style, CoreMessages.pref_page_ui_general_boolean_style_tip, SWT.DROP_DOWN | SWT.READ_ONLY);
-            for (BooleanRenderer.Style style : BooleanRenderer.Style.values()) {
-                booleanStyleSelector.add(style.getDisplayName());
+            Group groupEditors = UIUtils.createControlGroup(composite, "Booleans", 3, GridData.VERTICAL_ALIGN_BEGINNING, 0);
+
+            UIUtils.createControlLabel(groupEditors, "Display mode");
+
+            final SelectionAdapter selectionListener = new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    final DBPPreferenceStore store = DBWorkbench.getPlatform().getPreferenceStore();
+                    final BooleanMode mode = (BooleanMode) e.widget.getData();
+                    notifyBooleanStylesChanged(BooleanStyleSet.getDefaultStyles(store, mode));
+                }
+            };
+
+            booleanStylesChangeListeners.add(value -> {
+                booleanCheckedPanel.loadStyle(value.getCheckedStyle(), value.getDefaultColor());
+                booleanUncheckedPanel.loadStyle(value.getUncheckedStyle(), value.getDefaultColor());
+                booleanNullPanel.loadStyle(value.getNullStyle(), value.getDefaultColor());
+                defaultColor = value.getDefaultColor();
+            });
+
+            for (BooleanMode mode : BooleanMode.values()) {
+                final Button button = UIUtils.createRadioButton(groupEditors, mode.getName(), mode, null);
+                button.setToolTipText(mode.getDescription());
+                button.addSelectionListener(selectionListener);
+                button.setData(mode);
+                booleanStylesChangeListeners.add(value -> button.setSelection(button.getData() == value.getMode()));
             }
+
+            final Composite group = new Composite(groupEditors, SWT.BORDER);
+            group.setLayout(GridLayoutFactory.swtDefaults().numColumns(7).create());
+            group.setLayoutData(GridDataFactory.swtDefaults().span(3, 1).create());
+
+            UIUtils.createLabel(group, "State");
+            UIUtils.createPlaceholder(group, 1);
+            UIUtils.createControlLabel(group, "Label");
+            UIUtils.createPlaceholder(group, 1);
+            UIUtils.createControlLabel(group, "Align");
+            UIUtils.createPlaceholder(group, 1);
+            UIUtils.createControlLabel(group, "Color");
+
+            booleanCheckedPanel = new BooleanPanel(group, BooleanState.CHECKED);
+            booleanUncheckedPanel = new BooleanPanel(group, BooleanState.UNCHECKED);
+            booleanNullPanel = new BooleanPanel(group, BooleanState.NULL);
         }
 
         performDefaults();
@@ -109,7 +164,7 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
         showPreviewOnSave.setSelection(store.getBoolean(NavigatorPreferences.NAVIGATOR_SHOW_SQL_PREVIEW));
         syncEditorDataSourceWithNavigator.setSelection(store.getBoolean(NavigatorPreferences.NAVIGATOR_SYNC_EDITOR_DATASOURCE));
 
-        booleanStyleSelector.select(BooleanRenderer.getDefaultStyle().ordinal());
+        notifyBooleanStylesChanged(BooleanStyleSet.getDefaultStyles(store));
     }
 
     @Override
@@ -124,8 +179,12 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
         store.setValue(NavigatorPreferences.NAVIGATOR_SHOW_SQL_PREVIEW, showPreviewOnSave.getSelection());
         store.setValue(NavigatorPreferences.NAVIGATOR_SYNC_EDITOR_DATASOURCE, syncEditorDataSourceWithNavigator.getSelection());
 
-        BooleanRenderer.setDefaultStyle(
-            CommonUtils.fromOrdinal(BooleanRenderer.Style.class, booleanStyleSelector.getSelectionIndex()));
+        BooleanStyleSet.setDefaultStyles(store, new BooleanStyleSet(
+            booleanCheckedPanel.saveStyle(),
+            booleanUncheckedPanel.saveStyle(),
+            booleanNullPanel.saveStyle(),
+            defaultColor
+        ));
 
         PrefUtils.savePreferenceStore(store);
 
@@ -150,4 +209,196 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
     {
     }
 
+    private void notifyBooleanStylesChanged(@NotNull BooleanStyleSet set) {
+        for (Consumer<BooleanStyleSet> listener : booleanStylesChangeListeners) {
+            listener.accept(set);
+        }
+    }
+
+    private static class BooleanPanel extends EventManager {
+        private static final String PROP_MODE = "modeValue";
+        private static final String PROP_TEXT = "textValue";
+        private static final String PROP_ALIGN = "alignValue";
+        private static final String PROP_COLOR = "colorValue";
+        private static final String PROP_DEFAULT_COLOR = "defaultColorValue";
+
+        private final Composite parent;
+        private final BooleanState state;
+
+        private BooleanMode currentMode;
+        private String currentText;
+        private BooleanAlignment currentAlignment;
+        private RGB currentColor;
+
+        public BooleanPanel(@NotNull Composite parent, @NotNull BooleanState state) {
+            this.parent = parent;
+            this.state = state;
+
+            {
+                final Label icon = UIUtils.createLabel(parent, state.getIcon());
+                icon.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
+                icon.setToolTipText(state.getLabel());
+            }
+
+            UIUtils.createLabel(parent, UIIcon.SEPARATOR_V);
+
+            {
+                final ModifyListener textModifyListener = e -> {
+                    // Do this way to avoid recursively firing the same event over and over again.
+                    // Modification to current text widget is already fired, so we're fine
+                    this.currentText = ((Text) e.widget).getText();
+                };
+
+                final SelectionListener menuSelectionListener = new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(SelectionEvent e) {
+                        notifyPropertyChanged(e.widget, PROP_TEXT, ((MenuItem) e.widget).getText());
+                    }
+                };
+
+                for (BooleanAlignment alignment : BooleanAlignment.values()) {
+                    final TextWithDropDown text = new TextWithDropDown(parent, SWT.BORDER, alignment.getStyle(), menuSelectionListener);
+                    text.getTextComponent().addModifyListener(textModifyListener);
+                    text.setData(alignment);
+                    text.addMenuItem("Predefined styles", null, null, null).setEnabled(false);
+                    text.addMenuSeparator();
+                    for (String variant : state.getPredefinedTextStyles()) {
+                        text.addMenuItem(variant);
+                    }
+
+                    ((GridData) text.getLayoutData()).widthHint = 120;
+
+                    addPropertyChangeListener(event -> {
+                        switch (event.getProperty()) {
+                            case PROP_TEXT:
+                                text.getTextComponent().setText((String) event.getNewValue());
+                                break;
+                            case PROP_MODE:
+                                UIUtils.enableWithChildren(text, event.getNewValue() == BooleanMode.TEXT);
+                                break;
+                            case PROP_COLOR:
+                                text.getTextComponent().setForeground(new Color((RGB) event.getNewValue()));
+                                break;
+                            case PROP_ALIGN:
+                                UIUtils.setControlVisible(text, event.getNewValue() == text.getData());
+                                text.getTextComponent().setText(currentText);
+                                break;
+                        }
+                    });
+                }
+            }
+
+            UIUtils.createLabel(parent, UIIcon.SEPARATOR_V);
+
+            {
+                final ToolBar alignToolBar = new ToolBar(parent, SWT.HORIZONTAL);
+
+                final SelectionListener selectionListener = new SelectionAdapter() {
+                    @Override
+                    public void widgetSelected(SelectionEvent e) {
+                        if (((ToolItem) e.widget).getSelection()) {
+                            // React only to 'Selection' (avoid firing secondary event to 'DefaultSelection')
+                            notifyPropertyChanged(e.widget, PROP_ALIGN, e.widget.getData());
+                        }
+                    }
+                };
+
+                for (final BooleanAlignment alignment : BooleanAlignment.values()) {
+                    final ToolItem item = new ToolItem(alignToolBar, SWT.RADIO);
+                    item.setImage(DBeaverIcons.getImage(alignment.getIcon()));
+                    item.setToolTipText(alignment.getLabel());
+                    item.addSelectionListener(selectionListener);
+                    item.setData(alignment);
+
+                    addPropertyChangeListener(event -> {
+                        if (event.getProperty().equals(PROP_ALIGN)) {
+                            item.setSelection(event.getNewValue() == item.getData());
+                        }
+                    });
+                }
+            }
+
+            UIUtils.createLabel(parent, UIIcon.SEPARATOR_V);
+
+            {
+                final DefaultColorSelector selector = new DefaultColorSelector(parent);
+                selector.setColorValue(new RGB(0, 0, 0));
+                selector.setDefaultColorValue(new RGB(0, 0, 0));
+                selector.addListener(e -> notifyPropertyChanged(selector, PROP_COLOR, selector.getColorValue()));
+
+                addPropertyChangeListener(event -> {
+                    if (event.getSource() == selector) {
+                        // Ignore our own event
+                        return;
+                    }
+                    switch (event.getProperty()) {
+                        case PROP_MODE:
+                            // Color is only applicable to text-based comboboxes
+                            selector.setEnabled(event.getNewValue() == BooleanMode.TEXT);
+                            break;
+                        case PROP_COLOR:
+                            selector.setColorValue((RGB) event.getNewValue());
+                            break;
+                        case PROP_DEFAULT_COLOR:
+                            selector.setDefaultColorValue((RGB) event.getNewValue());
+                            break;
+                    }
+                });
+            }
+
+            addPropertyChangeListener(event -> {
+                switch (event.getProperty()) {
+                    case PROP_MODE:
+                        this.currentMode = (BooleanMode) event.getNewValue();
+                        break;
+                    case PROP_TEXT:
+                        this.currentText = (String) event.getNewValue();
+                        break;
+                    case PROP_ALIGN:
+                        this.currentAlignment = (BooleanAlignment) event.getNewValue();
+                        this.parent.layout(true);
+                        break;
+                    case PROP_COLOR:
+                        this.currentColor = (RGB) event.getNewValue();
+                        break;
+                }
+            });
+        }
+
+        public void loadStyle(@NotNull BooleanStyle style, @NotNull RGB defaultColor) {
+            if (style.getMode() == BooleanMode.TEXT) {
+                notifyPropertyChanged(this, PROP_TEXT, style.getText());
+                notifyPropertyChanged(this, PROP_COLOR, style.getColor());
+                notifyPropertyChanged(this, PROP_DEFAULT_COLOR, defaultColor);
+            } else {
+                notifyPropertyChanged(this, PROP_TEXT, "");
+            }
+
+            notifyPropertyChanged(this, PROP_ALIGN, style.getAlignment());
+            notifyPropertyChanged(this, PROP_MODE, style.getMode());
+        }
+
+        @NotNull
+        public BooleanStyle saveStyle() {
+            if (currentMode == BooleanMode.TEXT) {
+                return BooleanStyle.usingText(currentText, currentAlignment, currentColor);
+            } else {
+                return BooleanStyle.usingIcon(state.choose(UIIcon.CHECK_ON, UIIcon.CHECK_OFF, UIIcon.CHECK_QUEST), currentAlignment);
+            }
+        }
+
+        public void addPropertyChangeListener(@NotNull IPropertyChangeListener listener) {
+            addListenerObject(listener);
+        }
+
+        public void notifyPropertyChanged(@NotNull Object source, @NotNull String property, @Nullable Object value) {
+            final Object[] listeners = getListeners();
+            if (listeners.length > 0) {
+                final PropertyChangeEvent event = new PropertyChangeEvent(source, property, null, value);
+                for (Object listener : listeners) {
+                    ((IPropertyChangeListener) listener).propertyChange(event);
+                }
+            }
+        }
+    }
 }

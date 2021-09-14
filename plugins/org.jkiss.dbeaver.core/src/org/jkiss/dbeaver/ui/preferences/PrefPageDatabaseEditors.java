@@ -102,9 +102,9 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
         }
 
         {
-            Group groupEditors = UIUtils.createControlGroup(composite, "Booleans", 3, GridData.VERTICAL_ALIGN_BEGINNING, 0);
+            Group groupEditors = UIUtils.createControlGroup(composite, CoreMessages.pref_page_ui_general_boolean, 3, GridData.VERTICAL_ALIGN_BEGINNING, 0);
 
-            UIUtils.createControlLabel(groupEditors, "Display mode");
+            UIUtils.createControlLabel(groupEditors, CoreMessages.pref_page_ui_general_boolean_label_mode);
 
             final SelectionAdapter selectionListener = new SelectionAdapter() {
                 @Override
@@ -134,13 +134,13 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
             group.setLayout(GridLayoutFactory.swtDefaults().numColumns(7).create());
             group.setLayoutData(GridDataFactory.swtDefaults().span(3, 1).create());
 
-            UIUtils.createLabel(group, "State");
+            UIUtils.createLabel(group, CoreMessages.pref_page_ui_general_boolean_label_state);
             UIUtils.createPlaceholder(group, 1);
-            UIUtils.createControlLabel(group, "Label");
+            UIUtils.createControlLabel(group, CoreMessages.pref_page_ui_general_boolean_label_text);
             UIUtils.createPlaceholder(group, 1);
-            UIUtils.createControlLabel(group, "Align");
+            UIUtils.createControlLabel(group, CoreMessages.pref_page_ui_general_boolean_label_align);
             UIUtils.createPlaceholder(group, 1);
-            UIUtils.createControlLabel(group, "Color");
+            UIUtils.createControlLabel(group, CoreMessages.pref_page_ui_general_boolean_label_color);
 
             booleanCheckedPanel = new BooleanPanel(group, BooleanState.CHECKED);
             booleanUncheckedPanel = new BooleanPanel(group, BooleanState.UNCHECKED);
@@ -260,7 +260,7 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
                     final TextWithDropDown text = new TextWithDropDown(parent, SWT.BORDER, alignment.getStyle(), menuSelectionListener);
                     text.getTextComponent().addModifyListener(textModifyListener);
                     text.setData(alignment);
-                    text.addMenuItem("Predefined styles", null, null, null).setEnabled(false);
+                    text.addMenuItem(CoreMessages.pref_page_ui_general_boolean_predefined_styles, null, null, null).setEnabled(false);
                     text.addMenuSeparator();
                     for (String variant : state.getPredefinedTextStyles()) {
                         text.addMenuItem(variant);
@@ -292,6 +292,7 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
 
             {
                 final ToolBar alignToolBar = new ToolBar(parent, SWT.HORIZONTAL);
+                alignToolBar.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
 
                 final SelectionListener selectionListener = new SelectionAdapter() {
                     @Override
@@ -383,7 +384,7 @@ public class PrefPageDatabaseEditors extends AbstractPrefPage implements IWorkbe
             if (currentMode == BooleanMode.TEXT) {
                 return BooleanStyle.usingText(currentText, currentAlignment, currentColor);
             } else {
-                return BooleanStyle.usingIcon(state.choose(UIIcon.CHECK_ON, UIIcon.CHECK_OFF, UIIcon.CHECK_QUEST), currentAlignment);
+                return BooleanStyle.usingIcon(state.getIcon(), currentAlignment);
             }
         }
 

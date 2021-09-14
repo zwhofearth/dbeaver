@@ -19,11 +19,12 @@ package org.jkiss.dbeaver.ui;
 import org.jkiss.code.NotNull;
 import org.jkiss.dbeaver.model.DBConstants;
 import org.jkiss.dbeaver.model.DBIcon;
+import org.jkiss.dbeaver.ui.internal.UIMessages;
 
 public enum BooleanState {
-    CHECKED("checked", "Checked", UIIcon.CHECK_ON, new String[]{"☑", "[v]", "yes", String.valueOf(true)}),
-    UNCHECKED("unchecked", "Unchecked", UIIcon.CHECK_OFF, new String[]{"☐", "[ ]", "no", String.valueOf(false)}),
-    NULL("null", "Null", UIIcon.CHECK_QUEST, new String[]{"☒", "[?]", DBConstants.NULL_VALUE_LABEL});
+    CHECKED("checked", UIMessages.control_boolean_state_checked, UIIcon.CHECK_ON, new String[]{"☑", "[v]", "yes", String.valueOf(true)}),
+    UNCHECKED("unchecked", UIMessages.control_boolean_state_unchecked, UIIcon.CHECK_OFF, new String[]{"☐", "[ ]", "no", String.valueOf(false)}),
+    NULL("null", UIMessages.control_boolean_state_null, UIIcon.CHECK_QUEST, new String[]{"☒", "[?]", DBConstants.NULL_VALUE_LABEL});
 
     private final String id;
     private final String label;

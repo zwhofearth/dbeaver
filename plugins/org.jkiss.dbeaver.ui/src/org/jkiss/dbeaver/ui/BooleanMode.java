@@ -17,10 +17,11 @@
 package org.jkiss.dbeaver.ui;
 
 import org.jkiss.code.NotNull;
+import org.jkiss.dbeaver.ui.internal.UIMessages;
 
 public enum BooleanMode {
-    TEXT("Text", "Textual checkbox representation"),
-    ICON("Icons", "Checkbox icons");
+    TEXT(UIMessages.control_boolean_mode_text, UIMessages.control_boolean_mode_text_tip),
+    ICON(UIMessages.control_boolean_mode_icon, UIMessages.control_boolean_mode_icon_tip);
 
     private final String name;
     private final String description;

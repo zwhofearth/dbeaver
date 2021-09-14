@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.jkiss.code.NotNull;
 import org.jkiss.dbeaver.ui.UIUtils;
+import org.jkiss.dbeaver.ui.internal.UIMessages;
 
 public class DefaultColorSelector extends ColorSelector {
     private RGB defaultColorValue;
@@ -44,7 +45,7 @@ public class DefaultColorSelector extends ColorSelector {
             }
         });
 
-        getButton().setToolTipText("Use right mouse button to reset color to its default value");
+        getButton().setToolTipText(UIMessages.control_default_color_selector_reset_default_tip);
     }
 
     @Override

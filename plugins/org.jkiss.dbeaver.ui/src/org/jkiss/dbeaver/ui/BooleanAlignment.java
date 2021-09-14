@@ -19,11 +19,12 @@ package org.jkiss.dbeaver.ui;
 import org.eclipse.swt.SWT;
 import org.jkiss.code.NotNull;
 import org.jkiss.dbeaver.model.DBIcon;
+import org.jkiss.dbeaver.ui.internal.UIMessages;
 
 public enum BooleanAlignment {
-    LEFT("Align to left", SWT.LEFT, UIIcon.ALIGN_TO_LEFT),
-    CENTER("Align to center", SWT.CENTER, UIIcon.ALIGN_TO_CENTER),
-    RIGHT("Align to right", SWT.RIGHT, UIIcon.ALIGN_TO_RIGHT);
+    LEFT(UIMessages.control_boolean_align_left, SWT.LEFT, UIIcon.ALIGN_TO_LEFT),
+    CENTER(UIMessages.control_boolean_align_center, SWT.CENTER, UIIcon.ALIGN_TO_CENTER),
+    RIGHT(UIMessages.control_boolean_align_right, SWT.RIGHT, UIIcon.ALIGN_TO_RIGHT);
 
     private final String label;
     private final int style;

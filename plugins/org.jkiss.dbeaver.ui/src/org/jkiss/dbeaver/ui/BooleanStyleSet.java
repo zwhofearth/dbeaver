@@ -149,13 +149,10 @@ public class BooleanStyleSet {
             final String text = store.getString(namespace + PROP_TEXT);
             final BooleanAlignment alignment = CommonUtils.valueOf(BooleanAlignment.class, store.getString(namespace + PROP_ALIGN), BooleanAlignment.CENTER);
             final RGB color = convertStringToColor(store.getString(namespace + PROP_COLOR), defaultColor);
-
             return BooleanStyle.usingText(text.trim(), alignment, color);
         } else {
-            final DBIcon icon = state.choose(UIIcon.CHECK_ON, UIIcon.CHECK_OFF, UIIcon.CHECK_QUEST);
             final BooleanAlignment alignment = CommonUtils.valueOf(BooleanAlignment.class, store.getString(namespace + PROP_ALIGN), BooleanAlignment.CENTER);
-
-            return BooleanStyle.usingIcon(icon, alignment);
+            return BooleanStyle.usingIcon(state.getIcon(), alignment);
         }
     }
 
